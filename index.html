@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<style type="text/css">
+.main-color {
+	background-color: green;
+	}
+.secondary-color {
+	background-color: orange;
+	}
+
+html, 
+body {
+    height: 100%;
+}
+
+.cell-img {
+	align:center;
+	position:absolute;
+	width: 160px;
+	height: 160px;
+	top: 0px;
+	left: 0px;
+}
+
+.avatar-img {
+	align:center;
+	width: 130px;
+	height: 130px;
+	position:absolute;
+	top: 15px;
+	left: 15px;
+}
+
+.cell-box {
+	position:relative;
+}
+
+.cell-field {
+	text-align:center;
+	font-size:25px;
+	max-width:160px;
+	margin-top:5px;
+}
+
+.cell {
+	position:relative;
+
+}
+</style>
+
+<html>	
+<body style="margin:0; padding:0; border:0;">
+	<header class="main-color" style="height:150px">
+		<p align="center" 
+		style="margin:inherit; padding:inherit; padding-top:40px; font-size:35px; font-weight: bold;">
+		Трекер инициативы</p>
+	</header>
+	
+	<div class="secondary-color" style="height:30%; overflow-x:auto; margin:10px">
+		<table align="center">
+			<td id="cell-1" class="cell">
+			<div class="cell-box">
+				<div class="cell-img" style="visibility:hidden; position:static;">
+				</div>
+				<img id="avatar-img-1" src="./goblin_avatar.png" class="avatar-img">
+				<img id="turn-img-1" src="./turn_avatar.png" class="cell-img">
+			</div>
+			
+			<div style="background-color:gray; padding:5px;">
+				<div id="cell-name" class="cell-field main-color">
+					<small>Гоблин</small>
+				</div>
+				<div id="cell-name" class="cell-field main-color">
+					<small>Инициатива: 20</small>
+				</div>
+			</div>
+			</td>
+
+		</table>
+	</div>
+	
+	<div style="margin:10px; background-color:gray" align="center">
+		<div class="main-color" style="width:200px; padding:5px" align="center">
+			<img id="card-img" class="cell-field" src="./goblin_avatar.png" class="avatar-img" style="position:relative;">
+			<input type="file" id="load-img" class="cell-field" onChange="fileSelected(this)">Загрузить изображение</button>
+			<input type="number" id="initiative-input" class="cell-field" placeholder ="Изначальная инициатива"></input>
+			<button id="create_card" class="cell-field" onClick="createCard()">Создать карточку</button>
+		</div>
+	</div>
+</body>
+</html>
+
+<script type="text/javascript">
+function fileSelected(e)
+{
+	card_image = document.getElementById('card-img');
+	path = './' + e.files[0].name;
+	card_image.setAttribute('src', path);
+}
+
+function createCard()
+{
+	card_image = document.getElementById('card-img');
+	path = card_image.getAttribute('src');
+	initiative_input = document.getElementById('initiative-input');
+	initiative = initiative_input.value;
+	
+	var data = [{'path':path, 'init':initiative}];
+	
+	var jsonString= JSON.stringify(data);
+	
+	dt = JSON.parse();
+	alert(dt);
+}
+</script>

@@ -50,14 +50,14 @@ body {
 
 <html>	
 <body style="margin:0; padding:0; border:0;">
-	<header class="main-color" style="height:150px">
+	<header class="main-color" style="height:120px">
 		<p align="center" 
 		style="margin:inherit; padding:inherit; padding-top:40px; font-size:35px; font-weight: bold;">
 		Трекер инициативы</p>
 	</header>
 	
-	<div class="secondary-color" style="height:30%; overflow-x:auto; margin:10px">
-		<table align="center">
+	<div class="secondary-color" style="overflow-x:auto; overflow-y:hidden; margin:10px">
+		<table align="center" style="margin:5px; margin-left:auto; margin-right:auto; ">
 			<td id="cell-1" class="cell">
 			<div class="cell-box">
 				<div class="cell-img" style="visibility:hidden; position:static;">
@@ -79,18 +79,46 @@ body {
 		</table>
 	</div>
 	
-	<div style="margin:10px; background-color:gray" align="center">
-		<div class="main-color" style="width:200px; padding:5px" align="center">
-			<img id="card-img" class="cell-field" src="./goblin_avatar.png" class="avatar-img" style="position:relative;">
-			<input type="file" id="load-img" class="cell-field" onChange="fileSelected(this)">Загрузить изображение</button>
-			<input type="number" id="initiative-input" class="cell-field" placeholder ="Изначальная инициатива"></input>
-			<button id="create_card" class="cell-field" onClick="createCard()">Создать карточку</button>
+	<div style="margin:10px; background-color:gray; display:flex; flex-direction:row; max-width:100%">
+		<div>
+			<button id="saveButton" onClick="SaveCards()">Сохранить базу</button>
+			<button id="loadButton" onClick="LoadCards()">Загрузить базу</button>
+		</div>
+		<div class="main-color" style="width:200px; padding:5px;">
+			<div style="display:block">
+				<p style="font-size:22px; padding:0px; margin:2px;" align="center">Добавить существо</p>
+				<img id="card-img" class="cell-field" src="./goblin_avatar.png" class="avatar-img" style="position:relative;">
+				<input type="file" id="load-img" class="cell-field" onChange="fileSelected(this)">Загрузить изображение</button>
+				<input type="text" id="initiative-input" class="cell-field" placeholder ="Имя существа"></input>
+				<button id="create_card" class="cell-field" onClick="createCard()">Создать карточку</button>
+			</div>
+		</div>
+		
+		<div class="main-color" style="margin-left:5px; padding:5px; overflow-x:auto; overflow-y:hidden;">
+			<p style="font-size:22px; padding:0px; margin:2px" align="center">Готовые существа</p>
+				<table>
+				<tr id="creatures">
+					<td class="cell" align="center">
+						<img id="avatar-img-1" src="./goblin_avatar.png" class="avatar-img" style="position:static">
+								
+						<div style="background-color:gray; padding:5px;">
+							<div id="cell-name" class="cell-field main-color">
+								<small>Гоблин</small>
+							</div>
+							<div id="cell-name" class="cell-field main-color">
+								<button id="" onClick="LogStorage()">Добавить на таймлайн</button>
+							</div>		
+						</div>	
+					</td>
+				</tr>	
+				</table>
 		</div>
 	</div>
 </body>
 </html>
 
 <script type="text/javascript">
+localStorage.clear();
 function fileSelected(e)
 {
 	card_image = document.getElementById('card-img');
@@ -100,16 +128,92 @@ function fileSelected(e)
 
 function createCard()
 {
-	card_image = document.getElementById('card-img');
-	path = card_image.getAttribute('src');
-	initiative_input = document.getElementById('initiative-input');
-	initiative = initiative_input.value;
+	var card_image = document.getElementById('card-img');
+	var path = card_image.getAttribute('src');
+	var name_input = document.getElementById('initiative-input');
+	var name = name_input.value;
 	
-	var data = [{'path':path, 'init':initiative}];
+	item = {"name":name, "path":path}
+	localStorageAdd(item);
+	CreatureCellAdd(item);
+	//UpdateCreatureTable();
+}
+
+async function SaveCards()
+{
+	var handle = await window.showSaveFilePicker();
+	const writable = await handle.createWritable();
+	await writable.write('Text example');
+	await writable.close();
 	
-	var jsonString= JSON.stringify(data);
+}
+
+async function LoadCards()
+{
+	var [handle] = await window.showOpenFilePicker({defaultDirectory: "../"});
+	var file = await handle.getFile();
+	var content = await file.text();
+	alert(content);
+}
+
+function localStorageAdd(items)
+{
+	console.log(localStorage.length);
+	if (localStorage.length != 0)
+	{
+		const storage = localStorage.getItem('cards');
+		const content = JSON.parse(storage);		
+		content.push(items);
+		items = content;
+		console.log(items);
+	}
+	else
+	{
+		items = [items]
+	}
 	
-	dt = JSON.parse();
-	alert(dt);
+	const newStorage = JSON.stringify(items);
+	localStorage.setItem('cards', newStorage)
+}
+
+function LogStorage()
+{
+	const storage = localStorage.getItem('cards');
+	const content = JSON.parse(storage);
+	for (var i = 0; i < content.length; i++) {
+		console.log(content[i].name);
+	}
+}
+
+function CreatureCellAdd(creature)
+{
+	var cell = document.createElement('td');
+	//div.className="";
+	cell.innerHTML = 
+	`<img id="avatar-img-1" src="`+creature.path+`" class="avatar-img" style="position:static">		
+	<div style="background-color:gray; padding:5px;">
+		<div id="cell-name" class="cell-field main-color">
+			<small>`+creature.name+`</small>
+		</div>
+		<div id="cell-name" class="cell-field main-color">
+			<button id="" onClick="LogStorage()">Добавить на таймлайн</button>
+		</div>		
+	</div>`;
+	creatures.append(cell);
+}
+
+function DeleteCreatureCell(id)
+{
+	const storage = localStorage.getItem('cards');
+	var content = JSON.parse(storage);
+	content = content.splice(id, 1);
+	
+	const newStorage = JSON.stringify(content);
+	localStorage.setItem('cards', newStorage)
+}
+
+function UpdateCreatureTable()
+{
+	
 }
 </script>

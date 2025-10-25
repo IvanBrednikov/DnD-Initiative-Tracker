@@ -55,7 +55,7 @@ body {
 	margin-top:5px;
 }
 
-.cell {
+.cell, .tracker-cell {
 	position:relative;
 	align:center;
 }
@@ -77,13 +77,14 @@ body {
 		Трекер инициативы</p>
 	</header>
 	
-	<div class="secondary-color" style="overflow-x:auto; overflow-y:hidden; margin:10px">
-		<button onClick="UpdateTrackTable()">Назначить порядок инициативы</button>
-		<button>Следующий ход</button>
-		<button>Пропустить текущий раунд</button>
+	<div class="secondary-color" style="overflow-x:auto; overflow-y:hidden; margin:10px; min-height:500px;">
+		<button onClick="FirstTurnUpdateTracker()">Назначить порядок инициативы</button>
+		<button onClick="nextTurn()">Следующий ход</button>
+		<button onClick="SkipRound()">Пропустить текущий раунд</button>
+		<button onClick="ClearTracker()">Очистить трекер</button>
 		<table id="tracker-table" align="center" style="margin:5px; margin-left:auto; margin-right:auto; ">
 			<tr id="tracker-row">
-			<td id="cell-1" class="cell cell-box-inactive" onMouseenter="showEffects('example_conc', 'example_power', 'example_debuff', 'example_buff', false)" onMouseleave="showEffects('example_conc', 'example_power', 'example_debuff', 'example_buff', true)">
+			<td id="cell-1" class="tracker-cell cell-box-inactive" onMouseenter="showEffects('example_conc', 'example_power', 'example_debuff', 'example_buff', false)" onMouseleave="showEffects('example_conc', 'example_power', 'example_debuff', 'example_buff', true)">
 			<div style="position:relative">
 				<div hidden="true" id="example_conc" style="position:absolute; left:0px; bottom:0px">
 					<img src="./concentrate_.png" width="30px">
@@ -142,6 +143,7 @@ body {
 		<div>
 			<button id="saveButton" onClick="SaveCards()">Сохранить базу</button>
 			<button id="loadButton" onClick="LoadCards()">Загрузить базу</button>
+			<button id="loadButton" onClick="DeleteCards()">Удалить базу</button>
 		</div>
 		<div class="main-color" style="width:200px; padding:5px;">
 			<div style="display:block">
@@ -196,6 +198,7 @@ body {
 //localStorage.removeItem('tracker');
 UpdateCreatureTable();
 UpdateTrackTable();
+UpdateTurnImage();
 function fileSelected(e)
 {
 	card_image = document.getElementById('card-img');
@@ -216,9 +219,7 @@ function createCard()
 	id = GetStorageLastId('cards')+1;
 	item = {"name":name, "path":path, 'color':color, 'id':id}
 	localStorageAdd(item);
-	//CreatureCellAdd(item);
 	UpdateCreatureTable();
-	
 	ClearNameField();
 }
 
@@ -226,17 +227,19 @@ async function SaveCards()
 {
 	var handle = await window.showSaveFilePicker();
 	const writable = await handle.createWritable();
-	await writable.write('Text example');
+	var str = JSON.stringify(localStorage);
+	await writable.write(str);
 	await writable.close();
-	
 }
 
 async function LoadCards()
 {
-	var [handle] = await window.showOpenFilePicker({defaultDirectory: "../"});
+	var [handle] = await window.showOpenFilePicker({defaultDirectory: "./"});
 	var file = await handle.getFile();
 	var content = await file.text();
-	alert(content);
+	content = JSON.parse(content);
+	localStorage.setItem('cards', content.cards);
+	UpdateCreatureTable();
 }
 
 function localStorageAdd(items)
@@ -318,7 +321,12 @@ function DeleteCreatureCell(id)
 	const newStorage = JSON.stringify(parsedContent);
 	localStorage.setItem('cards', newStorage);
 	
-	console.log(parsedContent);
+	UpdateCreatureTable();
+}
+
+function DeleteCards()
+{
+	localStorage.removeItem('cards');
 	UpdateCreatureTable();
 }
 
@@ -339,13 +347,16 @@ function UpdateCreatureTable()
 	newRow.id="creatures";
 	creatures-table.append(newRow);
 	
-	creatures = creatures.filter(str1 => str1.name.indexOf(filter) !== -1);
-	creatures = creatures.sort((a, b) => a.name.localeCompare(b.name));
-	
-	for (var i=0; i < creatures.length; i++)
+	if(creatures != null)
 	{
-		creature = creatures[i];
-		CreatureCellAdd(creature);
+		creatures = creatures.filter(str1 => str1.name.indexOf(filter) !== -1);
+		creatures = creatures.sort((a, b) => a.name.localeCompare(b.name));
+	
+		for (var i=0; i < creatures.length; i++)
+		{
+			creature = creatures[i];
+			CreatureCellAdd(creature);
+		}
 	}
 }
 
@@ -392,8 +403,6 @@ function TrackCreature(id_creature)
 		
 	items = JSON.stringify(items);
 	localStorage.setItem('tracker', items);
-	
-	console.log(items);
 }
 
 function AddTrackCell(track_item)
@@ -402,7 +411,7 @@ function AddTrackCell(track_item)
 	var cell = document.createElement('td');
 	cell.class="cell";
 	cell.innerHTML = `
-	<div id="cell-1" class="cell cell-box-inactive" onMouseenter="showEffects('show-conc`+track_item.id+`', 'show-power`+track_item.id+`', 'show-debuff`+track_item.id+`', 'show-buff`+track_item.id+`', false)" onMouseleave="showEffects('show-conc`+track_item.id+`', 'show-power`+track_item.id+`', 'show-debuff`+track_item.id+`', 'show-buff`+track_item.id+`', true)">
+	<div id="cell`+track_item.id+`" class="tracker-cell cell-box-inactive" onMouseenter="showEffects('show-conc`+track_item.id+`', 'show-power`+track_item.id+`', 'show-debuff`+track_item.id+`', 'show-buff`+track_item.id+`', false)" onMouseleave="showEffects('show-conc`+track_item.id+`', 'show-power`+track_item.id+`', 'show-debuff`+track_item.id+`', 'show-buff`+track_item.id+`', true)">
 			<div style="position:relative">
 				<div id="show-conc`+track_item.id+`" style="position:absolute; left:0px; bottom:0px; display:`+(track_item.effects.conc<0?'none':'block')+`">
 					<img src="./concentrate_.png" width="30px">
@@ -474,6 +483,14 @@ function DeleteTrack(id_track)
 	localStorage.setItem('tracker', str_);
 
 	UpdateTrackTable();
+	UpdateTurnImage();
+}
+
+function FirstTurnUpdateTracker()
+{
+	firstTurn();
+	UpdateTrackTable();
+	UpdateTurnImage();
 }
 
 function UpdateTrackTable()
@@ -491,21 +508,16 @@ function UpdateTrackTable()
 	const storage = localStorage.getItem('tracker');
 	var trackers = JSON.parse(storage);
 	
-	trackers = trackers.sort((a, b) => a.initiative - b.initiative);
+	trackers = trackers.sort((a, b) => b.initiative - a.initiative);
 	
 	//append cells
 	
 	for (var i=0; i < trackers.length; i++)
 	{
-		console.log(trackers[i]);
 		AddTrackCell(trackers[i]);
 	}
 }
 
-function NumericField(e)
-{
-
-}
 function ClearNameField()
 {
 	const name = document.getElementById("creature-name");
@@ -523,7 +535,6 @@ function SetInitiative(id_track)
 		if (storage[i].id == id_track)
 		{
 			storage[i].initiative = value;
-			console.log(storage[i]);
 			break;
 		}	
 	}
@@ -600,5 +611,202 @@ function changeEffect(effect_id, track_item_id, effect_type)
 	}
 	
 	localStorage.setItem('tracker', JSON.stringify(storage));
+}
+
+function firstTurn()
+{
+	var tracker = localStorage.getItem('tracker');
+	if (tracker.length > 0)
+	{
+		//check for any equals inititatives
+		var tracker = JSON.parse(tracker);
+		for (var i=0; i < tracker.length; i++)
+			for (var j=0; j < tracker.length; j++)
+			if (i != j && tracker[i].initiative == tracker[j].initiative)
+			{
+				alert('Two or more creatures has equal initiatives!!! It will cause error if creature which has turn was deleted and next creature has same initiative. CHANGE SAME INITIATIVE!!!');
+				i = tracker.length;
+				j = tracker.length;
+				break;
+			}
+		
+		var currentTurn = localStorage.getItem('turn'); //index in tracker of current creature turn
+		var currentInitiative = localStorage.getItem('inititative');
+		
+		//sort creatures by initiative
+		tracker = tracker.sort((a, b) => b.initiative - a.initiative);
+		currentTurn = tracker[0].id;
+		currentInitiative = tracker[0].initiative;
+		
+		localStorage.setItem('turn', currentTurn);
+		localStorage.setItem('inititative', currentInitiative);
+	}
+}
+
+function nextTurn()
+{
+	var tracker = localStorage.getItem('tracker');
+
+	if (tracker.length > 0)
+	{
+		//check for any equals inititatives
+		var tracker = JSON.parse(tracker);
+		for (var i=0; i < tracker.length; i++)
+			for (var j=0; j < tracker.length; j++)
+			if (i != j && tracker[i].initiative == tracker[j].initiative)
+			{
+				alert('Two or more creatures has equal initiatives!!! It will cause error if creature which has turn was deleted and next creature has same initiative. CHANGE SAME INITIATIVE!!!');
+				i = tracker.length;
+				j = tracker.length;
+				break;
+			}
+		
+		var currentTurn = localStorage.getItem('turn'); //index in tracker of current creature turn
+		var currentInitiative = localStorage.getItem('inititative');
+		
+		//sort creatures by initiative
+		tracker = tracker.sort((a, b) => b.initiative - a.initiative);
+		
+		if (currentTurn == null)
+		{
+			currentTurn = tracker[0].id;
+			currentInitiative = tracker[0].initiative;
+		}
+		else
+		{
+			var notFound = true; //flag
+		
+			for (var i=0; i < tracker.length; i++)
+			{
+				if (tracker[i].id == currentTurn)
+				{
+					notFound = false;
+					DecrementEffects(tracker[i].id);
+					if (i+1 >= tracker.length)
+					{
+						currentTurn = tracker[0].id;
+						currentInitiative = tracker[0].initiative;
+					}
+					else
+					{
+						currentTurn = tracker[i+1].id;
+						currentInitiative = tracker[i+1].initiative;
+					}
+					break;
+				}
+			}
+		
+			if (notFound)
+			{
+				for (var i=0; i < tracker.length; i++)
+					if (tracker[i].initiative < currentInitiative)
+					{
+						notFound = false;
+						currentTurn = tracker[i].id;
+						currentInitiative = tracker[i].initiative;
+						break;
+					}
+					
+				if (notFound)
+					{
+						currentTurn = tracker[0].id;
+						currentInitiative = tracker[0].initiative;
+					}
+			}
+		}
+	
+		localStorage.setItem('turn', currentTurn);
+		localStorage.setItem('inititative', currentInitiative);
+	}
+	UpdateTrackTable();
+	UpdateTurnImage();
+}
+
+function UpdateTurnImage()
+{
+	var cells = document.getElementsByClassName('tracker-cell');
+	var currentTurn_id = localStorage.getItem('turn');
+	
+	if (currentTurn_id != null)
+	{
+		for(var i =0; i < cells.length; i++)
+		{
+			if (cells[i].id.replace('cell', '') == currentTurn_id)
+			{
+				cells[i].classList.remove('cell-box-inactive');
+				cells[i].classList.add('cell-box');
+			}
+			else
+			{
+				cells[i].classList.remove('cell-box');
+				cells[i].classList.add('cell-box-inactive');
+			}
+		}
+	}
+}
+
+function DecrementEffects(track_id)
+{
+	var tracker = JSON.parse(localStorage.getItem('tracker'));
+	for (var i=0; i<tracker.length; i++)
+	{
+		if(tracker[i].id == track_id)
+		{	
+			if (tracker[i].effects['conc'] >= 0)
+				tracker[i].effects['conc'] -= 1;
+			
+			if (tracker[i].effects['buff'] >= 0)
+				tracker[i].effects['buff'] -= 1;
+				
+			if (tracker[i].effects['power'] >= 0)
+				tracker[i].effects['power'] -= 1;
+				
+			if (tracker[i].effects['debuff'] >= 0)
+				tracker[i].effects['debuff'] -= 1;
+		}
+	}
+	localStorage.setItem('tracker', JSON.stringify(tracker));
+}
+
+function SkipRound()
+{
+	var tracker = JSON.parse(localStorage.getItem('tracker'));
+	tracker = tracker.sort((a, b) => b.initiative - a.initiative);
+	var currentTurn = localStorage.getItem('turn');
+	var currentIndex = -1;
+	
+	for (var i=0; i < tracker.length; i++)
+		if (tracker[i].id == currentTurn)
+		{
+			currentIndex = i;
+			break;
+		}
+		
+	if (currentIndex == -1)
+	{
+		var currentInitiative = localStorage.getItem('initiative');
+		for (var i=0; i < tracker.length; i++)
+			if (tracker[i].initiative < currentInitiative)
+			{
+				currentIndex = i;
+				break;
+			}
+	}
+	
+	for (var i=currentIndex; i < tracker.length; i++)
+		DecrementEffects(tracker[i].id);
+	
+	firstTurn();
+	UpdateTrackTable();
+	UpdateTurnImage();
+}
+
+function ClearTracker()
+{
+	localStorage.removeItem('tracker');
+	localStorage.removeItem('turn');
+	localStorage.removeItem('initiative');
+	UpdateTrackTable();
+	UpdateTurnImage();
 }
 </script>

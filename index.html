@@ -29,15 +29,23 @@ body {
 
 .avatar-img {
 	align:center;
-	width: 130px;
-	height: 130px;
-	position:absolute;
-	top: 15px;
-	left: 15px;
+	width: 220px;
+	height: 220px;
 }
 
 .cell-box {
-	position:relative;
+	background-image:url("./ramka2.png");
+	background-size: 360px 480px;
+	background-repeat:no-repeat;
+	background-position: center;
+	padding:60px;
+}
+
+.cell-box-inactive{
+	background-image:none;
+	background-size:0px;
+	background-repeat:no-repeat;
+	background-position: center;
 }
 
 .cell-field {
@@ -55,6 +63,10 @@ body {
 .tracker-cell-block {
 	display:inline-block;
 }
+
+.effect-cell{
+	valign:bottom;
+}
 </style>
 
 <html>	
@@ -71,50 +83,52 @@ body {
 		<button>Пропустить текущий раунд</button>
 		<table id="tracker-table" align="center" style="margin:5px; margin-left:auto; margin-right:auto; ">
 			<tr id="tracker-row">
-			<td id="cell-1" class="cell">
-			<table>
-				<tr>
-				<td>
-					<img src="./concentrate.png" width="30px">
-					<input type="number" style="width:25px; font-size:25px;">
-				</td>
+			<td id="cell-1" class="cell cell-box-inactive" onMouseenter="showEffects('example_conc', 'example_power', 'example_debuff', 'example_buff', false)" onMouseleave="showEffects('example_conc', 'example_power', 'example_debuff', 'example_buff', true)">
+			<div style="position:relative">
+				<div hidden="true" id="example_conc" style="position:absolute; left:0px; bottom:0px">
+					<img src="./concentrate_.png" width="30px">
+					<input id="concetrate-input" type="number" style="width:40px; font-size:25px; border:0px;" value="-1">
+				</div>
 				
-				<td>
-					<div class="cell-box">
-						<div class="cell-img" style="visibility:hidden; position:static;">
-						</div>
-						<img id="avatar-img-1" src="./goblin_avatar.png" class="avatar-img">
-						<img id="turn-img-1" src="./turn_avatar.png" class="cell-img-off">
-					</div>
-				</td>
-				
-				<td>
-					<div>
-						<img src="./debuff.png" width="30px">
-						<input type="number" style="width:40px; font-size:25px;">
-					</div>
-					
-					<div>
-						<img src="./power.png" width="30px">
-						<input type="number" style="width:40px; font-size:25px;">
-					</div>
-					
-					<div>
-						<img src="./buff.png" width="30px">
-						<input type="number" style="width:40px; font-size:25px;">
-					</div>
-				</td>
-				</tr>
-			</table>
+				<div>
+					<img id="avatar-img-1" src="./goblin_avatar.png" class="avatar-img">
+				</div>
 			
-			<div style="background-color:gray; padding:5px;">
+				<div style="position:absolute; right:0px; bottom:0px">
+					<div hidden="true" id="example_debuff">
+						<img src="./debuff_.png" width="30px">
+						<input id="debuff-input" type="number" style="width:40px; font-size:25px; border:0px;" value="-1">
+					</div>
+					
+					<div hidden="true" id="example_power">
+						<img src="./power_.png" width="30px">
+						<input id="power-input" type="number" style="width:40px; font-size:25px; border:0px;" value="-1">
+					</div>
+					
+					<div hidden="true" id="example_buff">
+						<img src="./buff_.png" width="30px">
+						<input id="buff-input" type="number" style="width:40px; font-size:25px; border:0px;" value="-1">
+					</div>
+				</div>
+			</div>
+			<div style="padding:5px;" align="center">
 				<div id="cell-name" class="cell-field main-color">
 					<small>Гоблин</small>
 				</div>
-				<div id="cell-name" class="cell-field main-color">
-					<input type="text" style="width:98%; background-color:green; border:none; font-size:25px; text-align:center;" value="0"></input>
+				<div id="cell-initiative" class="cell-field main-color">
+					<input type="text" style="width:98%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="0"></input>
 				</div>
-				<div id="cell-name" class="cell-field main-color">
+				<div id="cell-delete" class="cell-field main-color">
+					<input type="color" id="select-color" class="cell-field" list="colors" value="#008000" onChange="changeColor(['cell-name', 'cell-initiative', 'cell-delete', 'power-input', 'debuff-input', 'buff-input', 'concetrate-input'], 'select-color', 0)"></input>
+					<datalist id="colors">
+					<option value="#ff0000">
+					<option value="#008000">
+					<option value="#808080">
+					<option value="#ffff00">
+					<option value="#8b00ff">
+					<option value="#42aaff">
+					<option value="#ffffff">
+				</datalist>
 					<button onClick="">Удалить</button>
 				</div>
 				
@@ -179,9 +193,9 @@ body {
 
 <script type="text/javascript">
 //localStorage.clear();
-localStorage.removeItem('tracker');
+//localStorage.removeItem('tracker');
 UpdateCreatureTable();
-//UpdateTrackTable();
+UpdateTrackTable();
 function fileSelected(e)
 {
 	card_image = document.getElementById('card-img');
@@ -357,7 +371,8 @@ function TrackCreature(id_creature)
 	
 	//getting last id for specify delete func
 	var id = GetStorageLastId('tracker') + 1;
-	track_item = {'id':id, 'creature':creature, 'initiative':0};
+	effects = {'conc':-1, 'debuff':-1, 'power':-1, 'buff':-1};
+	track_item = {'id':id, 'creature':creature, 'effects':effects, 'initiative':0};
 	
 	//create cell
 	AddTrackCell(track_item)
@@ -387,24 +402,57 @@ function AddTrackCell(track_item)
 	var cell = document.createElement('td');
 	cell.class="cell";
 	cell.innerHTML = `
-	<div class="cell-box">
-				<div class="cell-img" style="visibility:hidden; position:static;">
+	<div id="cell-1" class="cell cell-box-inactive" onMouseenter="showEffects('show-conc`+track_item.id+`', 'show-power`+track_item.id+`', 'show-debuff`+track_item.id+`', 'show-buff`+track_item.id+`', false)" onMouseleave="showEffects('show-conc`+track_item.id+`', 'show-power`+track_item.id+`', 'show-debuff`+track_item.id+`', 'show-buff`+track_item.id+`', true)">
+			<div style="position:relative">
+				<div id="show-conc`+track_item.id+`" style="position:absolute; left:0px; bottom:0px; display:`+(track_item.effects.conc<0?'none':'block')+`">
+					<img src="./concentrate_.png" width="30px">
+					<input id="concetrate-input`+track_item.id+`" type="number" style="width:40px; font-size:25px; border:0px; background-color:`+creature.color+`" value="`+track_item.effects.conc+`" onChange="changeEffect('concetrate-input`+track_item.id+`', `+track_item.id+`, 'conc')">
 				</div>
-				<img id="avatar-img-1" src="`+creature.path+`" class="avatar-img">
-				<img id="turn-img-1" src="./turn_avatar.png" class="cell-img-off">
-			</div>
+				
+				<div>
+					<img id="avatar-img-1" src="`+creature.path+`" class="avatar-img">
+				</div>
 			
-			<div style="background-color:gray; padding:5px;">
-				<div id="cell-name" class="cell-field main-color" style="background-color:`+creature.color+`">
+				<div style="position:absolute; right:0px; bottom:0px;">
+					<div id="show-debuff`+track_item.id+`" style="display:`+(track_item.effects.debuff<0?'none':'block')+`">
+						<img src="./debuff_.png" width="30px">
+						<input id="debuff-input`+track_item.id+`" type="number" style="width:40px; font-size:25px; border:0px; background-color:`+creature.color+`;" value="`+track_item.effects.debuff+`" onChange="changeEffect('debuff-input`+track_item.id+`', `+track_item.id+`, 'debuff')";>
+					</div>
+					
+					<div id="show-power`+track_item.id+`" style="display:`+(track_item.effects.power<0?'none':'block')+`">
+						<img src="./power_.png" width="30px">
+						<input id="power-input`+track_item.id+`" type="number" style="width:40px; font-size:25px; border:0px; background-color:`+creature.color+`;" value="`+track_item.effects.power+`" onChange="changeEffect('power-input`+track_item.id+`', `+track_item.id+`, 'power')";>
+					</div>
+					
+					<div id="show-buff`+track_item.id+`" style="display:`+(track_item.effects.buff<0?'none':'block')+`">
+						<img src="./buff_.png" width="30px">
+						<input id="buff-input`+track_item.id+`" type="number" style="width:40px; font-size:25px; border:0px; background-color:`+creature.color+`;" value="`+track_item.effects.buff+`" onChange="changeEffect('buff-input`+track_item.id+`', `+track_item.id+`, 'buff')">
+					</div>
+				</div>
+			</div>
+			<div style="padding:5px;" align="center">
+				<div id="cell-name`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`">
 					<small>`+creature.name+`</small>
 				</div>
-				<div id="cell-name" class="cell-field main-color" style="background-color:`+creature.color+`">
-					<input id="track_`+track_item.id+`" type="text" onChange="SetInitiative(`+track_item.id+`)" style="width:100%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="`+track_item.initiative+`"></input>
+				<div id="cell-initiative`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`" >
+					<input id="track_`+track_item.id+`" type="text" style="width:98%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="`+track_item.initiative+`" onChange="SetInitiative(`+track_item.id+`)" value="`+track_item.initiative+`"></input>
 				</div>
-				<div id="cell-name" class="cell-field main-color" style="background-color:`+creature.color+`">
+				<div id="cell-delete`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`">
+					<input type="color" id="select-color`+track_item.id+`" class="cell-field" list="colors" value="`+creature.color+`" onChange="changeColor(['cell-name`+track_item.id+`', 'cell-initiative`+track_item.id+`', 'cell-delete`+track_item.id+`', 'power-input`+track_item.id+`', 'debuff-input`+track_item.id+`', 'buff-input`+track_item.id+`', 'concetrate-input`+track_item.id+`'], 'select-color`+track_item.id+`', `+track_item.id+`)"></input>
+					<datalist id="colors">
+					<option value="#ff0000">
+					<option value="#008000">
+					<option value="#808080">
+					<option value="#ffff00">
+					<option value="#8b00ff">
+					<option value="#42aaff">
+					<option value="#ffffff">
+				</datalist>
 					<button onClick="DeleteTrack(`+track_item.id+`)">Удалить</button>
 				</div>
-			</div>`;
+				
+			</div>
+		</div>`;
 	
 	//append to row
 	const tracker = document.getElementById("tracker-row");
@@ -482,5 +530,75 @@ function SetInitiative(id_track)
 	
 	storage = JSON.stringify(storage);
 	localStorage.setItem('tracker', storage);
+}
+
+function showEffects(concentration_id, power_id, debuff_id, buff_id, value)
+{
+	const conc_el = document.getElementById(concentration_id);
+	const power_el = document.getElementById(power_id);
+	const debuff_el = document.getElementById(debuff_id);
+	const buff_el = document.getElementById(buff_id);
+	
+	//check every input
+	if (value)
+	{
+		// getting value of input: console.log(conc_el.childNodes[3].value);
+		if (conc_el.childNodes[3].value < 0)
+			conc_el.style.display = 'none';
+		if (power_el.childNodes[3].value < 0)
+			power_el.style.display = 'none';
+		if (debuff_el.childNodes[3].value < 0)
+			debuff_el.style.display = 'none';
+		if (buff_el.childNodes[3].value < 0)
+			buff_el.style.display = 'none';
+	}
+	else
+	{
+		conc_el.style.display = 'block';
+		power_el.style.display = 'block';
+		debuff_el.style.display = 'block';
+		buff_el.style.display = 'block';
+	}	
+}
+
+function changeColor(fields, color_field_id, track_id)
+{
+	var color_field_el = document.getElementById(color_field_id);
+	var color = color_field_el.value;
+	
+	for (var j = 0; j < fields.length; j++)
+	{
+		var field_el = document.getElementById(fields[j]);
+		field_el.style.backgroundColor = color;
+	}
+	
+	var storage = JSON.parse(localStorage.getItem('tracker'));
+	for (var i = 0; i < storage.length; i++)
+	{
+		if (storage[i].id==track_id)
+		{
+			storage[i].creature.color = color;
+			localStorage.setItem('tracker', JSON.stringify(storage));
+			break;
+		}
+	}
+	
+	
+}
+
+function changeEffect(effect_id, track_item_id, effect_type)
+{
+	
+	const effect_value = document.getElementById(effect_id).value;
+	var storage = JSON.parse(localStorage.getItem('tracker'));
+	for (var i = 0; i < storage.length; i++)
+	{
+		if (storage[i].id == track_item_id)
+		{
+			storage[i].effects[effect_type] = effect_value;
+		}
+	}
+	
+	localStorage.setItem('tracker', JSON.stringify(storage));
 }
 </script>

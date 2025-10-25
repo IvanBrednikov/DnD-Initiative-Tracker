@@ -2,15 +2,25 @@
 
 <style type="text/css">
 .main-color {
-	background-color: green;
+	background-color: rgba(80,80,80,0.4);
 	}
 .secondary-color {
-	background-color: orange;
+	background-color: rgba(189, 155, 25, 0.8);
+	font-weight:700;
+	font-size:20px;
+	border-radius:7px;
+	border-width:3px;
 	}
 
 html, 
 body {
     height: 100%;
+}
+
+body {
+	background-image: url('background.jpg');
+	background-size: cover;
+	background-repeat: none;
 }
 
 .cell-img, cell-img-off {
@@ -33,6 +43,11 @@ body {
 	height: 220px;
 }
 
+.creature-img {
+	width: 150px;
+	height: 150px;
+}
+
 .cell-box {
 	background-image:url("./ramka2.png");
 	background-size: 360px 480px;
@@ -50,7 +65,10 @@ body {
 
 .cell-field {
 	text-align:center;
-	font-size:25px;
+	font-weight:700;
+	font-size:30px;
+	border-radius:7px;
+	border:3px outset black;
 	max-width:160px;
 	margin-top:5px;
 }
@@ -67,21 +85,33 @@ body {
 .effect-cell{
 	valign:bottom;
 }
+
+.input-color{
+	padding:0px;
+	border-radius:7px;
+	border:3px outset black;
+}
 </style>
 
 <html>	
 <body style="margin:0; padding:0; border:0;">
-	<header class="main-color" style="height:120px">
-		<p align="center" 
-		style="margin:inherit; padding:inherit; padding-top:40px; font-size:35px; font-weight: bold;">
-		Трекер инициативы</p>
+	<header class="main-color" style="">
+	<div style="display:flex; flex-direction:row; max-width:100%; align-items:center; height:200px;">
+		<img src="./image.png" height="200px" style="position:absolute;">
+		<div style="display:flex; justify-content:center; width:100%">
+		<div class='secondary-color' style="font-size:50px; font-weight: bold; ">
+		Трекер инициативы</div>
+		</div>
+	</div>
 	</header>
 	
-	<div class="secondary-color" style="overflow-x:auto; overflow-y:hidden; margin:10px; min-height:500px;">
-		<button onClick="FirstTurnUpdateTracker()">Назначить порядок инициативы</button>
-		<button onClick="nextTurn()">Следующий ход</button>
-		<button onClick="SkipRound()">Пропустить текущий раунд</button>
-		<button onClick="ClearTracker()">Очистить трекер</button>
+	<div class="main-color" style="overflow-x:auto; overflow-y:hidden; margin:10px; min-height:500px;">
+		<div style="margin:5px;">
+			<button class="secondary-color" onClick="FirstTurnUpdateTracker()">Назначить порядок инициативы</button>
+			<button class="secondary-color" onClick="nextTurn()">Следующий ход</button>
+			<button class="secondary-color" onClick="SkipRound()">Пропустить текущий раунд</button>
+			<button class="secondary-color" onClick="ClearTracker()">Очистить трекер</button>
+		</div>
 		<table id="tracker-table" align="center" style="margin:5px; margin-left:auto; margin-right:auto; ">
 			<tr id="tracker-row">
 			<td id="cell-1" class="tracker-cell cell-box-inactive" onMouseenter="showEffects('example_conc', 'example_power', 'example_debuff', 'example_buff', false)" onMouseleave="showEffects('example_conc', 'example_power', 'example_debuff', 'example_buff', true)">
@@ -139,18 +169,23 @@ body {
 		</table>
 	</div>
 	
-	<div style="margin:10px; background-color:gray; display:flex; flex-direction:row; max-width:100%">
-		<div>
-			<button id="saveButton" onClick="SaveCards()">Сохранить базу</button>
-			<button id="loadButton" onClick="LoadCards()">Загрузить базу</button>
-			<button id="loadButton" onClick="DeleteCards()">Удалить базу</button>
+	<div class='main-color'>
+		<div style="margin:5px">
+			<button class="secondary-color" onClick="SaveCards()">Сохранить базу</button>
+			<button class="secondary-color" onClick="LoadCards()">Загрузить базу</button>
+			<button class="secondary-color" onClick="DeleteCards()">Удалить базу</button>
+			<input class='secondary-color' id="filter-input" type="text" onkeydown="UpdateCreatureTable()" placeholder ="Поиск">
 		</div>
+	<div style="margin:10px; display:flex; flex-direction:row; max-width:100%">
 		<div class="main-color" style="width:200px; padding:5px;">
-			<div style="display:block">
-				<p style="font-size:22px; padding:0px; margin:2px;" align="center">Добавить существо</p>
-				<img id="card-img" class="cell-field" src="./goblin_avatar.png" class="avatar-img" style="position:relative;">
-				<input type="file" id="load-img" class="cell-field" onChange="fileSelected(this)">Загрузить изображение</button>
-				<input type="color" id="select-color" class="cell-field" list="colors" value="#ff0000"></input>
+			<div style="display:block;" align="center">
+				<p class='secondary-color' style="font-size:22px; padding:0px; margin:2px;" align="center">Добавить существо</p>
+				<img id="card-img" class="creature-img" src="./goblin_avatar.png" style="position:relative; margin:5px;" align="center">
+				<div style="position:relative;">
+					<input type="file" id="load-img" style="opacity:0; width:100%; height:35px" onChange="fileSelected(this)">
+					<label for="load-img" style="position:absolute; top:0; left:0; pointer-events:none; width:100%; height:10px"><button class="secondary-color" style="width:200px; height:35px">Выбор файла</button></label>
+				</div>
+				<input type="color" id="select-color" class="input-color secondary-color" style="max-width:100%; width:100%" list="colors" value="#ff0000"></input>
 				<datalist id="colors">
 					<option value="#ff0000">
 					<option value="#008000">
@@ -161,15 +196,17 @@ body {
 					<option value="#ffffff">
 				</datalist>
 				
-				<input type="text" id="creature-name" class="cell-field" placeholder ="Имя существа"></input>
-				<button id="create_card" class="cell-field" onClick="createCard()">Создать карточку</button>
+				<input type="text" id="creature-name" class="cell-field secondary-color" style="max-width:95%; font-size:20px;" placeholder ="Имя существа"></input>
+				<button class='secondary-color' id="create_card" class="cell-field" style="margin-top:5px; width:100%" onClick="createCard()">Создать карточку</button>
 			</div>
 		</div>
 		
-		<div class="main-color" style="margin-left:5px; padding:5px; overflow-x:auto; overflow-y:hidden;">
-			<p style="font-size:22px; padding:0px; margin:2px" align="center">Готовые существа</p>
-			<input id="filter-input" type="text" onkeydown="UpdateCreatureTable()">	
-				<table id="creatures-table">
+		<div class="main-color" style="margin-left:5px; margin-top:5px; display:flex; flex-direction:column; width:90%;">
+			<div>
+				<p class='secondary-color' style="font-size:22px; padding:0px; margin:2px" align="center">Готовые существа</p>
+			</div>
+		<div style="overflow-x:scroll; overflow-y:hidden; min-height:300px;">
+			<table id="creatures-table">
 				<tr id="creatures">
 					<td class="cell" align="center">
 						<img id="avatar-img-1" src="./goblin_avatar.png" class="avatar-img" style="position:static">
@@ -189,6 +226,8 @@ body {
 				</tr>	
 				</table>
 		</div>
+		</div>
+	</div>
 	</div>
 </body>
 </html>
@@ -276,17 +315,17 @@ function CreatureCellAdd(creature)
 	var cell = document.createElement('td');
 	cell.className="cell";
 	cell.innerHTML = 
-	`<img id="avatar-img-1" src="`+creature.path+`" class="avatar-img" style="position:static;">		
-	<div style="background-color:gray; padding:5px;">
-		<div id="cell-name" class="cell-field main-color" style="background-color:`+creature.color+`">
+	`<img src="`+creature.path+`" class="creature-img" style="position:relative;">		
+	<div class="main-color" style="padding:5px;">
+		<div class="cell-field secondary-color" style="background-color:`+creature.color+`">
 			<small>`+creature.name+`</small>
 		</div>
-		<div id="cell-name" class="cell-field main-color">
-			<button id="" onClick="TrackCreature(`+creature.id+`)">В бой!</button>
+		<div style="margin-top:5px;">
+			<button class="secondary-color" style="width:100%; height:100%" onClick="TrackCreature(`+creature.id+`)">В бой!</button>
 		</div>		
 		
-		<div id="cell-name" class="cell-field main-color">
-			<button id="" onClick="DeleteCreatureCell(`+creature.id+`)">Удалить</button>
+		<div style="margin-top:5px;">
+			<button class="secondary-color" style="width:100%; height:100%" onClick="DeleteCreatureCell(`+creature.id+`)">Удалить</button>
 		</div>	
 	</div>`;
 	creatures.append(cell);
@@ -349,7 +388,7 @@ function UpdateCreatureTable()
 	
 	if(creatures != null)
 	{
-		creatures = creatures.filter(str1 => str1.name.indexOf(filter) !== -1);
+		creatures = creatures.filter(str1 => str1.name.toLowerCase().indexOf(filter) !== -1);
 		creatures = creatures.sort((a, b) => a.name.localeCompare(b.name));
 	
 		for (var i=0; i < creatures.length; i++)
@@ -444,10 +483,10 @@ function AddTrackCell(track_item)
 					<small>`+creature.name+`</small>
 				</div>
 				<div id="cell-initiative`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`" >
-					<input id="track_`+track_item.id+`" type="text" style="width:98%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="`+track_item.initiative+`" onChange="SetInitiative(`+track_item.id+`)" value="`+track_item.initiative+`"></input>
+					<input id="track_`+track_item.id+`" class='secondary-color' type="text" style="width:97%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="`+track_item.initiative+`" onChange="SetInitiative(`+track_item.id+`)" value="`+track_item.initiative+`"></input>
 				</div>
 				<div id="cell-delete`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`">
-					<input type="color" id="select-color`+track_item.id+`" class="cell-field" list="colors" value="`+creature.color+`" onChange="changeColor(['cell-name`+track_item.id+`', 'cell-initiative`+track_item.id+`', 'cell-delete`+track_item.id+`', 'power-input`+track_item.id+`', 'debuff-input`+track_item.id+`', 'buff-input`+track_item.id+`', 'concetrate-input`+track_item.id+`'], 'select-color`+track_item.id+`', `+track_item.id+`)"></input>
+					<input type="color" id="select-color`+track_item.id+`" class="input-color" style="background-color:`+creature.color+`" list="colors" value="`+creature.color+`" onChange="changeColor(['cell-name`+track_item.id+`', 'cell-initiative`+track_item.id+`', 'cell-delete`+track_item.id+`', 'power-input`+track_item.id+`', 'debuff-input`+track_item.id+`', 'buff-input`+track_item.id+`', 'concetrate-input`+track_item.id+`'], 'select-color`+track_item.id+`', `+track_item.id+`)"></input>
 					<datalist id="colors">
 					<option value="#ff0000">
 					<option value="#008000">
@@ -457,7 +496,7 @@ function AddTrackCell(track_item)
 					<option value="#42aaff">
 					<option value="#ffffff">
 				</datalist>
-					<button onClick="DeleteTrack(`+track_item.id+`)">Удалить</button>
+					<button class='secondary-color' style="background-color:`+creature.color+`" onClick="DeleteTrack(`+track_item.id+`)">Удалить</button>
 				</div>
 				
 			</div>

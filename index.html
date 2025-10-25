@@ -13,13 +13,18 @@ body {
     height: 100%;
 }
 
-.cell-img {
+.cell-img, cell-img-off {
 	align:center;
 	position:absolute;
 	width: 160px;
 	height: 160px;
 	top: 0px;
 	left: 0px;
+	display:visible;
+}
+
+.cell-img-off {
+	display:none;
 }
 
 .avatar-img {
@@ -44,7 +49,11 @@ body {
 
 .cell {
 	position:relative;
+	align:center;
+}
 
+.tracker-cell-block {
+	display:inline-block;
 }
 </style>
 
@@ -57,25 +66,61 @@ body {
 	</header>
 	
 	<div class="secondary-color" style="overflow-x:auto; overflow-y:hidden; margin:10px">
-		<table align="center" style="margin:5px; margin-left:auto; margin-right:auto; ">
+		<button onClick="UpdateTrackTable()">Назначить порядок инициативы</button>
+		<button>Следующий ход</button>
+		<button>Пропустить текущий раунд</button>
+		<table id="tracker-table" align="center" style="margin:5px; margin-left:auto; margin-right:auto; ">
+			<tr id="tracker-row">
 			<td id="cell-1" class="cell">
-			<div class="cell-box">
-				<div class="cell-img" style="visibility:hidden; position:static;">
-				</div>
-				<img id="avatar-img-1" src="./goblin_avatar.png" class="avatar-img">
-				<img id="turn-img-1" src="./turn_avatar.png" class="cell-img">
-			</div>
+			<table>
+				<tr>
+				<td>
+					<img src="./concentrate.png" width="30px">
+					<input type="number" style="width:25px; font-size:25px;">
+				</td>
+				
+				<td>
+					<div class="cell-box">
+						<div class="cell-img" style="visibility:hidden; position:static;">
+						</div>
+						<img id="avatar-img-1" src="./goblin_avatar.png" class="avatar-img">
+						<img id="turn-img-1" src="./turn_avatar.png" class="cell-img-off">
+					</div>
+				</td>
+				
+				<td>
+					<div>
+						<img src="./debuff.png" width="30px">
+						<input type="number" style="width:40px; font-size:25px;">
+					</div>
+					
+					<div>
+						<img src="./power.png" width="30px">
+						<input type="number" style="width:40px; font-size:25px;">
+					</div>
+					
+					<div>
+						<img src="./buff.png" width="30px">
+						<input type="number" style="width:40px; font-size:25px;">
+					</div>
+				</td>
+				</tr>
+			</table>
 			
 			<div style="background-color:gray; padding:5px;">
 				<div id="cell-name" class="cell-field main-color">
 					<small>Гоблин</small>
 				</div>
 				<div id="cell-name" class="cell-field main-color">
-					<small>Инициатива: 20</small>
+					<input type="text" style="width:98%; background-color:green; border:none; font-size:25px; text-align:center;" value="0"></input>
 				</div>
+				<div id="cell-name" class="cell-field main-color">
+					<button onClick="">Удалить</button>
+				</div>
+				
 			</div>
 			</td>
-
+			</tr>
 		</table>
 	</div>
 	
@@ -89,14 +134,26 @@ body {
 				<p style="font-size:22px; padding:0px; margin:2px;" align="center">Добавить существо</p>
 				<img id="card-img" class="cell-field" src="./goblin_avatar.png" class="avatar-img" style="position:relative;">
 				<input type="file" id="load-img" class="cell-field" onChange="fileSelected(this)">Загрузить изображение</button>
-				<input type="text" id="initiative-input" class="cell-field" placeholder ="Имя существа"></input>
+				<input type="color" id="select-color" class="cell-field" list="colors" value="#ff0000"></input>
+				<datalist id="colors">
+					<option value="#ff0000">
+					<option value="#008000">
+					<option value="#808080">
+					<option value="#ffff00">
+					<option value="#8b00ff">
+					<option value="#42aaff">
+					<option value="#ffffff">
+				</datalist>
+				
+				<input type="text" id="creature-name" class="cell-field" placeholder ="Имя существа"></input>
 				<button id="create_card" class="cell-field" onClick="createCard()">Создать карточку</button>
 			</div>
 		</div>
 		
 		<div class="main-color" style="margin-left:5px; padding:5px; overflow-x:auto; overflow-y:hidden;">
 			<p style="font-size:22px; padding:0px; margin:2px" align="center">Готовые существа</p>
-				<table>
+			<input id="filter-input" type="text" onkeydown="UpdateCreatureTable()">	
+				<table id="creatures-table">
 				<tr id="creatures">
 					<td class="cell" align="center">
 						<img id="avatar-img-1" src="./goblin_avatar.png" class="avatar-img" style="position:static">
@@ -107,7 +164,10 @@ body {
 							</div>
 							<div id="cell-name" class="cell-field main-color">
 								<button id="" onClick="LogStorage()">Добавить на таймлайн</button>
-							</div>		
+							</div>
+							<div id="cell-name" class="cell-field main-color">
+								<button id="" onClick="DeleteCreatureCell()">Удалить</button>
+							</div>							
 						</div>	
 					</td>
 				</tr>	
@@ -118,7 +178,10 @@ body {
 </html>
 
 <script type="text/javascript">
-localStorage.clear();
+//localStorage.clear();
+localStorage.removeItem('tracker');
+UpdateCreatureTable();
+//UpdateTrackTable();
 function fileSelected(e)
 {
 	card_image = document.getElementById('card-img');
@@ -130,13 +193,19 @@ function createCard()
 {
 	var card_image = document.getElementById('card-img');
 	var path = card_image.getAttribute('src');
-	var name_input = document.getElementById('initiative-input');
+	var name_input = document.getElementById('creature-name');
 	var name = name_input.value;
+	var color_input = document.getElementById('select-color');
+	var color = color_input.value;
 	
-	item = {"name":name, "path":path}
+	
+	id = GetStorageLastId('cards')+1;
+	item = {"name":name, "path":path, 'color':color, 'id':id}
 	localStorageAdd(item);
-	CreatureCellAdd(item);
-	//UpdateCreatureTable();
+	//CreatureCellAdd(item);
+	UpdateCreatureTable();
+	
+	ClearNameField();
 }
 
 async function SaveCards()
@@ -188,32 +257,230 @@ function LogStorage()
 function CreatureCellAdd(creature)
 {
 	var cell = document.createElement('td');
-	//div.className="";
+	cell.className="cell";
 	cell.innerHTML = 
-	`<img id="avatar-img-1" src="`+creature.path+`" class="avatar-img" style="position:static">		
+	`<img id="avatar-img-1" src="`+creature.path+`" class="avatar-img" style="position:static;">		
 	<div style="background-color:gray; padding:5px;">
-		<div id="cell-name" class="cell-field main-color">
+		<div id="cell-name" class="cell-field main-color" style="background-color:`+creature.color+`">
 			<small>`+creature.name+`</small>
 		</div>
 		<div id="cell-name" class="cell-field main-color">
-			<button id="" onClick="LogStorage()">Добавить на таймлайн</button>
+			<button id="" onClick="TrackCreature(`+creature.id+`)">В бой!</button>
 		</div>		
+		
+		<div id="cell-name" class="cell-field main-color">
+			<button id="" onClick="DeleteCreatureCell(`+creature.id+`)">Удалить</button>
+		</div>	
 	</div>`;
 	creatures.append(cell);
+}
+
+function GetStorageLastId(table)
+{
+	const storage = localStorage.getItem(table);
+	const parsedContent = JSON.parse(storage);
+	
+	if (parsedContent == null || parsedContent.length == 0)
+		return 0;
+	else
+		return (parsedContent[parsedContent.length-1].id);
 }
 
 function DeleteCreatureCell(id)
 {
 	const storage = localStorage.getItem('cards');
-	var content = JSON.parse(storage);
-	content = content.splice(id, 1);
+	const parsedContent = JSON.parse(storage);
+	var notFound = true;
+	for (var i=0; i < parsedContent.length; i++)
+	{
+		if (parsedContent[i].id == id)
+			parsedContent.splice(i, 1);
+			notFound = false;
+	}
 	
-	const newStorage = JSON.stringify(content);
-	localStorage.setItem('cards', newStorage)
+	if (notFound)
+		console.log("creature id not found");
+	
+	const newStorage = JSON.stringify(parsedContent);
+	localStorage.setItem('cards', newStorage);
+	
+	console.log(parsedContent);
+	UpdateCreatureTable();
 }
 
 function UpdateCreatureTable()
 {
+	const storage = localStorage.getItem('cards');
+	var creatures = JSON.parse(storage);
 	
+	const row = document.getElementById("creatures");
+	const table = document.getElementById("creatures-table");
+	
+	const input = document.getElementById("filter-input");
+	const filter = input.value;
+	
+	row.remove();
+	
+	var newRow = document.createElement('tr');
+	newRow.id="creatures";
+	creatures-table.append(newRow);
+	
+	creatures = creatures.filter(str1 => str1.name.indexOf(filter) !== -1);
+	creatures = creatures.sort((a, b) => a.name.localeCompare(b.name));
+	
+	for (var i=0; i < creatures.length; i++)
+	{
+		creature = creatures[i];
+		CreatureCellAdd(creature);
+	}
+}
+
+function TrackCreature(id_creature)
+{
+	//search creature and make track-item
+	const storage = localStorage.getItem('cards');
+	const track_storage = localStorage.getItem('tracker');
+	var creatures = JSON.parse(storage);
+	var creature = null;
+	var track_item = null;
+	
+	not_found = true;
+	for (var i=0; i < creatures.length;i++)
+		if (creatures[i].id == id_creature)
+		{
+			creature = creatures[i];
+			not_found = false;
+		}
+	
+	if (not_found)
+		console.log("cant track creature with id: "+ id_creature+ "; id not found");
+	
+	//getting last id for specify delete func
+	var id = GetStorageLastId('tracker') + 1;
+	track_item = {'id':id, 'creature':creature, 'initiative':0};
+	
+	//create cell
+	AddTrackCell(track_item)
+	
+	
+	var items = null;
+
+	
+	if (track_storage == null)
+		items = [track_item];
+	else
+	{
+		var parsedTrack= JSON.parse(track_storage);
+		parsedTrack.push(track_item);
+		items = parsedTrack;
+	}
+		
+	items = JSON.stringify(items);
+	localStorage.setItem('tracker', items);
+	
+	console.log(items);
+}
+
+function AddTrackCell(track_item)
+{
+	var creature = track_item.creature;
+	var cell = document.createElement('td');
+	cell.class="cell";
+	cell.innerHTML = `
+	<div class="cell-box">
+				<div class="cell-img" style="visibility:hidden; position:static;">
+				</div>
+				<img id="avatar-img-1" src="`+creature.path+`" class="avatar-img">
+				<img id="turn-img-1" src="./turn_avatar.png" class="cell-img-off">
+			</div>
+			
+			<div style="background-color:gray; padding:5px;">
+				<div id="cell-name" class="cell-field main-color" style="background-color:`+creature.color+`">
+					<small>`+creature.name+`</small>
+				</div>
+				<div id="cell-name" class="cell-field main-color" style="background-color:`+creature.color+`">
+					<input id="track_`+track_item.id+`" type="text" onChange="SetInitiative(`+track_item.id+`)" style="width:100%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="`+track_item.initiative+`"></input>
+				</div>
+				<div id="cell-name" class="cell-field main-color" style="background-color:`+creature.color+`">
+					<button onClick="DeleteTrack(`+track_item.id+`)">Удалить</button>
+				</div>
+			</div>`;
+	
+	//append to row
+	const tracker = document.getElementById("tracker-row");
+	tracker.append(cell);
+}
+
+function DeleteTrack(id_track)
+{
+	const track_storage = localStorage.getItem('tracker');
+	var track = JSON.parse(track_storage);
+	
+	for (var i=0; i < track.length; i++)
+	{
+		if (track[i].id == id_track)
+			track.splice(i, 1);
+	}
+		
+	const str_ = JSON.stringify(track);
+	localStorage.setItem('tracker', str_);
+
+	UpdateTrackTable();
+}
+
+function UpdateTrackTable()
+{
+	//delete, create
+	const tracker_table = document.getElementById("tracker-table");
+	var tracker_row = document.getElementById("tracker-row");
+	
+	tracker_row.remove();
+	tracker_row = document.createElement('tr');
+	tracker_row.id = "tracker-row";
+	tracker_table.append(tracker_row);
+	
+	//get and sort creatures by initiative
+	const storage = localStorage.getItem('tracker');
+	var trackers = JSON.parse(storage);
+	
+	trackers = trackers.sort((a, b) => a.initiative - b.initiative);
+	
+	//append cells
+	
+	for (var i=0; i < trackers.length; i++)
+	{
+		console.log(trackers[i]);
+		AddTrackCell(trackers[i]);
+	}
+}
+
+function NumericField(e)
+{
+
+}
+function ClearNameField()
+{
+	const name = document.getElementById("creature-name");
+	name.value = "";
+}
+
+function SetInitiative(id_track)
+{
+	var value = document.getElementById("track_"+id_track).value
+	var storage = localStorage.getItem('tracker');
+	storage = JSON.parse(storage);
+	
+	for(var i=0; i < storage.length; i++)
+	{
+		if (storage[i].id == id_track)
+		{
+			storage[i].initiative = value;
+			console.log(storage[i]);
+			break;
+		}	
+	}
+	
+	storage = JSON.stringify(storage);
+	localStorage.setItem('tracker', storage);
 }
 </script>

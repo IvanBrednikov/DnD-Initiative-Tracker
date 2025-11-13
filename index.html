@@ -66,11 +66,14 @@ body {
 .cell-field {
 	text-align:center;
 	font-weight:700;
-	font-size:30px;
+	font-size:1.5cqw;
+	line-height:1;
 	border-radius:7px;
 	border:3px outset black;
-	max-width:160px;
+	max-width:200px;
 	margin-top:5px;
+	max-height:60px;
+	min-height:25px;
 }
 
 .cell, .tracker-cell {
@@ -94,8 +97,14 @@ body {
 </style>
 
 <html>	
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" href="./icon.ico" type="image/x-icon">
+	<title>D&D Tracker</title>
+</head>
 <body style="margin:0; padding:0; border:0;">
-	<header class="main-color" style="">
+	<header class="main-color" style="" >
 	<div style="display:flex; flex-direction:row; max-width:100%; align-items:center; height:200px;">
 		<img src="./image.png" height="200px" style="position:absolute;">
 		<div style="display:flex; justify-content:center; width:100%">
@@ -122,7 +131,7 @@ body {
 				</div>
 				
 				<div>
-					<img id="avatar-img-1" src="./goblin_avatar.png" class="avatar-img">
+					<img id="avatar-img-1" src="./avatars/goblin_avatar.png" class="avatar-img">
 				</div>
 			
 				<div style="position:absolute; right:0px; bottom:0px">
@@ -144,7 +153,7 @@ body {
 			</div>
 			<div style="padding:5px;" align="center">
 				<div id="cell-name" class="cell-field main-color">
-					<small>Гоблин</small>
+					<input type="text" style="width:98%; background-color:inherit; border:none; font-size:25px; text-align:center; font-weight:700;" value="Гоблин" onChange="changeName()"></input>
 				</div>
 				<div id="cell-initiative" class="cell-field main-color">
 					<input type="text" style="width:98%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="0"></input>
@@ -180,7 +189,7 @@ body {
 		<div class="main-color" style="width:200px; padding:5px;">
 			<div style="display:block;" align="center">
 				<p class='secondary-color' style="font-size:22px; padding:0px; margin:2px;" align="center">Добавить существо</p>
-				<img id="card-img" class="creature-img" src="./goblin_avatar.png" style="position:relative; margin:5px;" align="center">
+				<img id="card-img" class="creature-img" src="./avatars/goblin_avatar.png" style="position:relative; margin:5px;" align="center">
 				<div style="position:relative;">
 					<input type="file" id="load-img" style="opacity:0; width:100%; height:35px" onChange="fileSelected(this)">
 					<label for="load-img" style="position:absolute; top:0; left:0; pointer-events:none; width:100%; height:10px"><button class="secondary-color" style="width:200px; height:35px">Выбор файла</button></label>
@@ -209,7 +218,7 @@ body {
 			<table id="creatures-table">
 				<tr id="creatures">
 					<td class="cell" align="center">
-						<img id="avatar-img-1" src="./goblin_avatar.png" class="avatar-img" style="position:static">
+						<img id="avatar-img-1" src="./avatars/goblin_avatar.png" class="avatar-img" style="position:static">
 								
 						<div style="background-color:gray; padding:5px;">
 							<div id="cell-name" class="cell-field main-color">
@@ -235,13 +244,16 @@ body {
 <script type="text/javascript">
 //localStorage.clear();
 //localStorage.removeItem('tracker');
+
 UpdateCreatureTable();
 UpdateTrackTable();
 UpdateTurnImage();
+
+document.addEventListener('keydown', GlobalKeyDown)
 function fileSelected(e)
 {
 	card_image = document.getElementById('card-img');
-	path = './' + e.files[0].name;
+	path = './avatars/' + e.files[0].name;
 	card_image.setAttribute('src', path);
 }
 
@@ -315,10 +327,13 @@ function CreatureCellAdd(creature)
 	var cell = document.createElement('td');
 	cell.className="cell";
 	cell.innerHTML = 
-	`<img src="`+creature.path+`" class="creature-img" style="position:relative;">		
+	`
+	<div style="display:flex; justify-content:center;">
+		<img src="`+creature.path+`" class="creature-img" style="position:relative;">		
+	</div>
 	<div class="main-color" style="padding:5px;">
 		<div class="cell-field secondary-color" style="background-color:`+creature.color+`">
-			<small>`+creature.name+`</small>
+			`+creature.name+`
 		</div>
 		<div style="margin-top:5px;">
 			<button class="secondary-color" style="width:100%; height:100%" onClick="TrackCreature(`+creature.id+`)">В бой!</button>
@@ -366,6 +381,7 @@ function DeleteCreatureCell(id)
 function DeleteCards()
 {
 	localStorage.removeItem('cards');
+	localStorage.setItem('cards', '[]');
 	UpdateCreatureTable();
 }
 
@@ -448,6 +464,10 @@ function AddTrackCell(track_item)
 {
 	var creature = track_item.creature;
 	var cell = document.createElement('td');
+	var initiative = track_item.initiative;
+	if (initiative == 0)
+		initiative = '';
+	
 	cell.class="cell";
 	cell.innerHTML = `
 	<div id="cell`+track_item.id+`" class="tracker-cell cell-box-inactive" onMouseenter="showEffects('show-conc`+track_item.id+`', 'show-power`+track_item.id+`', 'show-debuff`+track_item.id+`', 'show-buff`+track_item.id+`', false)" onMouseleave="showEffects('show-conc`+track_item.id+`', 'show-power`+track_item.id+`', 'show-debuff`+track_item.id+`', 'show-buff`+track_item.id+`', true)">
@@ -480,13 +500,13 @@ function AddTrackCell(track_item)
 			</div>
 			<div style="padding:5px;" align="center">
 				<div id="cell-name`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`">
-					<small>`+creature.name+`</small>
+					<input id="cell-input`+track_item.id+`" type="text" style="width:98%; background-color:inherit; border:none; font-size:25px; text-align:center; font-weight:700;" value="`+creature.name+`" onChange="changeName('`+track_item.id+`', 'cell-input`+track_item.id+`')"></input>
 				</div>
 				<div id="cell-initiative`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`" >
-					<input id="track_`+track_item.id+`" class='secondary-color' type="text" style="width:97%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="`+track_item.initiative+`" onChange="SetInitiative(`+track_item.id+`)" value="`+track_item.initiative+`"></input>
+					<input id="track_`+track_item.id+`" class='secondary-color' type="text" style="width:97%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="`+initiative+`" onChange="SetInitiative(`+track_item.id+`)" placeholder ="Инициатива"></input>
 				</div>
 				<div id="cell-delete`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`">
-					<input type="color" id="select-color`+track_item.id+`" class="input-color" style="background-color:`+creature.color+`" list="colors" value="`+creature.color+`" onChange="changeColor(['cell-name`+track_item.id+`', 'cell-initiative`+track_item.id+`', 'cell-delete`+track_item.id+`', 'power-input`+track_item.id+`', 'debuff-input`+track_item.id+`', 'buff-input`+track_item.id+`', 'concetrate-input`+track_item.id+`'], 'select-color`+track_item.id+`', `+track_item.id+`)"></input>
+					<input type="color" id="select-color`+track_item.id+`" class="input-color" style="background-color:`+creature.color+`" list="colors" value="`+creature.color+`" onChange="changeColor(['cell-name`+track_item.id+`', 'cell-initiative`+track_item.id+`', 'cell-delete`+track_item.id+`', 'power-input`+track_item.id+`', 'debuff-input`+track_item.id+`', 'buff-input`+track_item.id+`', 'concetrate-input`+track_item.id+`', 'delete-btn`+track_item.id+`', 'select-color`+track_item.id+`'], 'select-color`+track_item.id+`', `+track_item.id+`)"></input>
 					<datalist id="colors">
 					<option value="#ff0000">
 					<option value="#008000">
@@ -496,7 +516,7 @@ function AddTrackCell(track_item)
 					<option value="#42aaff">
 					<option value="#ffffff">
 				</datalist>
-					<button class='secondary-color' style="background-color:`+creature.color+`" onClick="DeleteTrack(`+track_item.id+`)">Удалить</button>
+					<button id="delete-btn`+track_item.id+`" class='secondary-color' style="background-color:`+creature.color+`" onClick="DeleteTrack(`+track_item.id+`)">Удалить</button>
 				</div>
 				
 			</div>
@@ -634,6 +654,23 @@ function changeColor(fields, color_field_id, track_id)
 	}
 	
 	
+}
+
+function changeName(track_id, input_field)
+{
+	var name_field_el = document.getElementById(input_field);
+	var new_name = name_field_el.value;
+	
+	var storage = JSON.parse(localStorage.getItem('tracker'));
+	for (var i = 0; i < storage.length; i++)
+	{
+		if (storage[i].id==track_id)
+		{
+			storage[i].creature.name = new_name;
+			localStorage.setItem('tracker', JSON.stringify(storage));
+			break;
+		}
+	}
 }
 
 function changeEffect(effect_id, track_item_id, effect_type)
@@ -847,5 +884,13 @@ function ClearTracker()
 	localStorage.removeItem('initiative');
 	UpdateTrackTable();
 	UpdateTurnImage();
+}
+
+function GlobalKeyDown(e)
+{
+	if (e.key == 'Enter')
+	{
+		nextTurn();
+	}
 }
 </script>

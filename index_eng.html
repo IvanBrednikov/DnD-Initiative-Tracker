@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+
+<style type="text/css">
+.main-color {
+	background-color: rgba(80,80,80,0.4);
+	}
+.secondary-color {
+	background-color: rgba(189, 155, 25, 0.8);
+	font-weight:700;
+	font-size:20px;
+	border-radius:7px;
+	border-width:3px;
+	}
+
+html, 
+body {
+    height: 100%;
+}
+
+body {
+	background-image: url('background.jpg');
+	background-size: cover;
+	background-repeat: none;
+}
+
+.cell-img, cell-img-off {
+	align:center;
+	position:absolute;
+	width: 160px;
+	height: 160px;
+	top: 0px;
+	left: 0px;
+	display:visible;
+}
+
+.cell-img-off {
+	display:none;
+}
+
+.avatar-img {
+	align:center;
+	width: 220px;
+	height: 220px;
+}
+
+.creature-img {
+	width: 150px;
+	height: 150px;
+}
+
+.cell-box {
+	background-image:url("./ramka2.png");
+	background-size: 360px 480px;
+	background-repeat:no-repeat;
+	background-position: center;
+	padding:60px;
+}
+
+.cell-box-inactive{
+	background-image:none;
+	background-size:0px;
+	background-repeat:no-repeat;
+	background-position: center;
+}
+
+.cell-field {
+	text-align:center;
+	font-weight:700;
+	font-size:1.5cqw;
+	line-height:1;
+	border-radius:7px;
+	border:3px outset black;
+	max-width:200px;
+	margin-top:5px;
+	max-height:60px;
+	min-height:25px;
+}
+
+.cell, .tracker-cell {
+	position:relative;
+	align:center;
+}
+
+.tracker-cell-block {
+	display:inline-block;
+}
+
+.effect-cell{
+	valign:bottom;
+}
+
+.input-color{
+	padding:0px;
+	border-radius:7px;
+	border:3px outset black;
+}
+</style>
+
+<html>	
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" href="./icon.ico" type="image/x-icon">
+	<title>D&D Tracker</title>
+</head>
+<body style="margin:0; padding:0; border:0;">
+	<header class="main-color" style="" >
+	<div style="display:flex; flex-direction:row; max-width:100%; align-items:center; height:200px;">
+		<img src="./image.png" height="200px" style="position:absolute;">
+		<div style="display:flex; justify-content:center; width:100%">
+		<div class='secondary-color' style="font-size:50px; font-weight: bold; ">
+		Initiative tracker</div>
+		</div>
+	</div>
+	</header>
+	
+	<div class="main-color" style="overflow-x:auto; overflow-y:hidden; margin:10px; min-height:500px;">
+		<div style="margin:5px;">
+			<button class="secondary-color" onClick="FirstTurnUpdateTracker()">Specify initiative order</button>
+			<button class="secondary-color" onClick="nextTurn()">Next turn</button>
+			<button class="secondary-color" onClick="SkipRound()">Skip round</button>
+			<button class="secondary-color" onClick="ClearTracker()">Clear tracker</button>
+		</div>
+		<table id="tracker-table" align="center" style="margin:5px; margin-left:auto; margin-right:auto; ">
+			<tr id="tracker-row">
+			<td id="cell-1" class="tracker-cell cell-box-inactive" onMouseenter="showEffects('example_conc', 'example_power', 'example_debuff', 'example_buff', false)" onMouseleave="showEffects('example_conc', 'example_power', 'example_debuff', 'example_buff', true)">
+			<div style="position:relative">
+				<div hidden="true" id="example_conc" style="position:absolute; left:0px; bottom:0px">
+					<img src="./concentrate_.png" width="30px">
+					<input id="concetrate-input" type="number" style="width:40px; font-size:25px; border:0px;" value="-1">
+				</div>
+				
+				<div>
+					<img id="avatar-img-1" src="./avatars/goblin_avatar.png" class="avatar-img">
+				</div>
+			
+				<div style="position:absolute; right:0px; bottom:0px">
+					<div hidden="true" id="example_debuff">
+						<img src="./debuff_.png" width="30px">
+						<input id="debuff-input" type="number" style="width:40px; font-size:25px; border:0px;" value="-1">
+					</div>
+					
+					<div hidden="true" id="example_power">
+						<img src="./power_.png" width="30px">
+						<input id="power-input" type="number" style="width:40px; font-size:25px; border:0px;" value="-1">
+					</div>
+					
+					<div hidden="true" id="example_buff">
+						<img src="./buff_.png" width="30px">
+						<input id="buff-input" type="number" style="width:40px; font-size:25px; border:0px;" value="-1">
+					</div>
+				</div>
+			</div>
+			<div style="padding:5px;" align="center">
+				<div id="cell-name" class="cell-field main-color">
+					<input type="text" style="width:98%; background-color:inherit; border:none; font-size:25px; text-align:center; font-weight:700;" value="Гоблин" onChange="changeName()"></input>
+				</div>
+				<div id="cell-initiative" class="cell-field main-color">
+					<input type="text" style="width:98%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="0"></input>
+				</div>
+				<div id="cell-delete" class="cell-field main-color">
+					<input type="color" id="select-color" class="cell-field" list="colors" value="#008000" onChange="changeColor(['cell-name', 'cell-initiative', 'cell-delete', 'power-input', 'debuff-input', 'buff-input', 'concetrate-input'], 'select-color', 0)"></input>
+					<datalist id="colors">
+					<option value="#ff0000">
+					<option value="#008000">
+					<option value="#808080">
+					<option value="#ffff00">
+					<option value="#8b00ff">
+					<option value="#42aaff">
+					<option value="#ffffff">
+				</datalist>
+					<button onClick="">Delete</button>
+				</div>
+				
+			</div>
+			</td>
+			</tr>
+		</table>
+	</div>
+	
+	<div class='main-color'>
+		<div style="margin:5px">
+			<button class="secondary-color" onClick="SaveCards()">Save database</button>
+			<button class="secondary-color" onClick="LoadCards()">Load database</button>
+			<button class="secondary-color" onClick="DeleteCards()">Clear database</button>
+			<input class='secondary-color' id="filter-input" type="text" onkeydown="UpdateCreatureTable()" placeholder ="Find">
+		</div>
+	<div style="margin:10px; display:flex; flex-direction:row; max-width:100%">
+		<div class="main-color" style="width:200px; padding:5px;">
+			<div style="display:block;" align="center">
+				<p class='secondary-color' style="font-size:22px; padding:0px; margin:2px;" align="center">Add creature</p>
+				<img id="card-img" class="creature-img" src="./avatars/goblin_avatar.png" style="position:relative; margin:5px;" align="center">
+				<div style="position:relative;">
+					<input type="file" id="load-img" style="opacity:0; width:100%; height:35px" onChange="fileSelected(this)">
+					<label for="load-img" style="position:absolute; top:0; left:0; pointer-events:none; width:100%; height:10px"><button class="secondary-color" style="width:200px; height:35px">Select file</button></label>
+				</div>
+				<input type="color" id="select-color" class="input-color secondary-color" style="max-width:100%; width:100%" list="colors" value="#ff0000"></input>
+				<datalist id="colors">
+					<option value="#ff0000">
+					<option value="#008000">
+					<option value="#808080">
+					<option value="#ffff00">
+					<option value="#8b00ff">
+					<option value="#42aaff">
+					<option value="#ffffff">
+				</datalist>
+				
+				<input type="text" id="creature-name" class="cell-field secondary-color" style="max-width:95%; font-size:20px;" placeholder ="Creature name"></input>
+				<button class='secondary-color' id="create_card" class="cell-field" style="margin-top:5px; width:100%" onClick="createCard()">Create card</button>
+			</div>
+		</div>
+		
+		<div class="main-color" style="margin-left:5px; margin-top:5px; display:flex; flex-direction:column; width:90%;">
+			<div>
+				<p class='secondary-color' style="font-size:22px; padding:0px; margin:2px" align="center">Creatures</p>
+			</div>
+		<div style="overflow-x:scroll; overflow-y:hidden; min-height:300px;">
+			<table id="creatures-table">
+				<tr id="creatures">
+					<td class="cell" align="center">
+						<img id="avatar-img-1" src="./avatars/goblin_avatar.png" class="avatar-img" style="position:static">
+								
+						<div style="background-color:gray; padding:5px;">
+							<div id="cell-name" class="cell-field main-color">
+								<small>Goblin</small>
+							</div>
+							<div id="cell-name" class="cell-field main-color">
+								<button id="" onClick="LogStorage()">Add to tracker</button>
+							</div>
+							<div id="cell-name" class="cell-field main-color">
+								<button id="" onClick="DeleteCreatureCell()">Remove</button>
+							</div>							
+						</div>	
+					</td>
+				</tr>	
+				</table>
+		</div>
+		</div>
+	</div>
+	</div>
+</body>
+</html>
+
+<script type="text/javascript">
+//localStorage.clear();
+//localStorage.removeItem('tracker');
+
+UpdateCreatureTable();
+UpdateTrackTable();
+UpdateTurnImage();
+
+document.addEventListener('keydown', GlobalKeyDown)
+function fileSelected(e)
+{
+	card_image = document.getElementById('card-img');
+	path = './avatars/' + e.files[0].name;
+	card_image.setAttribute('src', path);
+}
+
+function createCard()
+{
+	var card_image = document.getElementById('card-img');
+	var path = card_image.getAttribute('src');
+	var name_input = document.getElementById('creature-name');
+	var name = name_input.value;
+	var color_input = document.getElementById('select-color');
+	var color = color_input.value;
+	
+	
+	id = GetStorageLastId('cards')+1;
+	item = {"name":name, "path":path, 'color':color, 'id':id}
+	localStorageAdd(item);
+	UpdateCreatureTable();
+	ClearNameField();
+}
+
+async function SaveCards()
+{
+	var handle = await window.showSaveFilePicker();
+	const writable = await handle.createWritable();
+	var str = JSON.stringify(localStorage);
+	await writable.write(str);
+	await writable.close();
+}
+
+async function LoadCards()
+{
+	var [handle] = await window.showOpenFilePicker({defaultDirectory: "./"});
+	var file = await handle.getFile();
+	var content = await file.text();
+	content = JSON.parse(content);
+	localStorage.setItem('cards', content.cards);
+	UpdateCreatureTable();
+}
+
+function localStorageAdd(items)
+{
+	console.log(localStorage.length);
+	if (localStorage.length != 0)
+	{
+		const storage = localStorage.getItem('cards');
+		const content = JSON.parse(storage);		
+		content.push(items);
+		items = content;
+		console.log(items);
+	}
+	else
+	{
+		items = [items]
+	}
+	
+	const newStorage = JSON.stringify(items);
+	localStorage.setItem('cards', newStorage)
+}
+
+function LogStorage()
+{
+	const storage = localStorage.getItem('cards');
+	const content = JSON.parse(storage);
+	for (var i = 0; i < content.length; i++) {
+		console.log(content[i].name);
+	}
+}
+
+function CreatureCellAdd(creature)
+{
+	var cell = document.createElement('td');
+	cell.className="cell";
+	cell.innerHTML = 
+	`
+	<div style="display:flex; justify-content:center;">
+		<img src="`+creature.path+`" class="creature-img" style="position:relative;">		
+	</div>
+	<div class="main-color" style="padding:5px;">
+		<div class="cell-field secondary-color" style="background-color:`+creature.color+`">
+			`+creature.name+`
+		</div>
+		<div style="margin-top:5px;">
+			<button class="secondary-color" style="width:100%; height:100%" onClick="TrackCreature(`+creature.id+`)">Fight!</button>
+		</div>		
+		
+		<div style="margin-top:5px;">
+			<button class="secondary-color" style="width:100%; height:100%" onClick="DeleteCreatureCell(`+creature.id+`)">Delete</button>
+		</div>	
+	</div>`;
+	creatures.append(cell);
+}
+
+function GetStorageLastId(table)
+{
+	const storage = localStorage.getItem(table);
+	const parsedContent = JSON.parse(storage);
+	
+	if (parsedContent == null || parsedContent.length == 0)
+		return 0;
+	else
+		return (parsedContent[parsedContent.length-1].id);
+}
+
+function DeleteCreatureCell(id)
+{
+	const storage = localStorage.getItem('cards');
+	const parsedContent = JSON.parse(storage);
+	var notFound = true;
+	for (var i=0; i < parsedContent.length; i++)
+	{
+		if (parsedContent[i].id == id)
+			parsedContent.splice(i, 1);
+			notFound = false;
+	}
+	
+	if (notFound)
+		console.log("creature id not found");
+	
+	const newStorage = JSON.stringify(parsedContent);
+	localStorage.setItem('cards', newStorage);
+	
+	UpdateCreatureTable();
+}
+
+function DeleteCards()
+{
+	localStorage.removeItem('cards');
+	localStorage.setItem('cards', '[]');
+	UpdateCreatureTable();
+}
+
+function UpdateCreatureTable()
+{
+	const storage = localStorage.getItem('cards');
+	var creatures = JSON.parse(storage);
+	
+	const row = document.getElementById("creatures");
+	const table = document.getElementById("creatures-table");
+	
+	const input = document.getElementById("filter-input");
+	const filter = input.value;
+	
+	row.remove();
+	
+	var newRow = document.createElement('tr');
+	newRow.id="creatures";
+	creatures-table.append(newRow);
+	
+	if(creatures != null)
+	{
+		creatures = creatures.filter(str1 => str1.name.toLowerCase().indexOf(filter) !== -1);
+		creatures = creatures.sort((a, b) => a.name.localeCompare(b.name));
+	
+		for (var i=0; i < creatures.length; i++)
+		{
+			creature = creatures[i];
+			CreatureCellAdd(creature);
+		}
+	}
+}
+
+function TrackCreature(id_creature)
+{
+	//search creature and make track-item
+	const storage = localStorage.getItem('cards');
+	const track_storage = localStorage.getItem('tracker');
+	var creatures = JSON.parse(storage);
+	var creature = null;
+	var track_item = null;
+	
+	not_found = true;
+	for (var i=0; i < creatures.length;i++)
+		if (creatures[i].id == id_creature)
+		{
+			creature = creatures[i];
+			not_found = false;
+		}
+	
+	if (not_found)
+		console.log("cant track creature with id: "+ id_creature+ "; id not found");
+	
+	//getting last id for specify delete func
+	var id = GetStorageLastId('tracker') + 1;
+	effects = {'conc':-1, 'debuff':-1, 'power':-1, 'buff':-1};
+	track_item = {'id':id, 'creature':creature, 'effects':effects, 'initiative':0};
+	
+	//create cell
+	AddTrackCell(track_item)
+	
+	
+	var items = null;
+
+	
+	if (track_storage == null)
+		items = [track_item];
+	else
+	{
+		var parsedTrack= JSON.parse(track_storage);
+		parsedTrack.push(track_item);
+		items = parsedTrack;
+	}
+		
+	items = JSON.stringify(items);
+	localStorage.setItem('tracker', items);
+}
+
+function AddTrackCell(track_item)
+{
+	var creature = track_item.creature;
+	var cell = document.createElement('td');
+	var initiative = track_item.initiative;
+	if (initiative == 0)
+		initiative = '';
+	
+	cell.class="cell";
+	cell.innerHTML = `
+	<div id="cell`+track_item.id+`" class="tracker-cell cell-box-inactive" onMouseenter="showEffects('show-conc`+track_item.id+`', 'show-power`+track_item.id+`', 'show-debuff`+track_item.id+`', 'show-buff`+track_item.id+`', false)" onMouseleave="showEffects('show-conc`+track_item.id+`', 'show-power`+track_item.id+`', 'show-debuff`+track_item.id+`', 'show-buff`+track_item.id+`', true)">
+			<div style="position:relative">
+				<div id="show-conc`+track_item.id+`" style="position:absolute; left:0px; bottom:0px; display:`+(track_item.effects.conc<0?'none':'block')+`">
+					<img src="./concentrate_.png" width="30px">
+					<input id="concetrate-input`+track_item.id+`" type="number" style="width:40px; font-size:25px; border:0px; background-color:`+creature.color+`" value="`+track_item.effects.conc+`" onChange="changeEffect('concetrate-input`+track_item.id+`', `+track_item.id+`, 'conc')">
+				</div>
+				
+				<div>
+					<img id="avatar-img-1" src="`+creature.path+`" class="avatar-img">
+				</div>
+			
+				<div style="position:absolute; right:0px; bottom:0px;">
+					<div id="show-debuff`+track_item.id+`" style="display:`+(track_item.effects.debuff<0?'none':'block')+`">
+						<img src="./debuff_.png" width="30px">
+						<input id="debuff-input`+track_item.id+`" type="number" style="width:40px; font-size:25px; border:0px; background-color:`+creature.color+`;" value="`+track_item.effects.debuff+`" onChange="changeEffect('debuff-input`+track_item.id+`', `+track_item.id+`, 'debuff')";>
+					</div>
+					
+					<div id="show-power`+track_item.id+`" style="display:`+(track_item.effects.power<0?'none':'block')+`">
+						<img src="./power_.png" width="30px">
+						<input id="power-input`+track_item.id+`" type="number" style="width:40px; font-size:25px; border:0px; background-color:`+creature.color+`;" value="`+track_item.effects.power+`" onChange="changeEffect('power-input`+track_item.id+`', `+track_item.id+`, 'power')";>
+					</div>
+					
+					<div id="show-buff`+track_item.id+`" style="display:`+(track_item.effects.buff<0?'none':'block')+`">
+						<img src="./buff_.png" width="30px">
+						<input id="buff-input`+track_item.id+`" type="number" style="width:40px; font-size:25px; border:0px; background-color:`+creature.color+`;" value="`+track_item.effects.buff+`" onChange="changeEffect('buff-input`+track_item.id+`', `+track_item.id+`, 'buff')">
+					</div>
+				</div>
+			</div>
+			<div style="padding:5px;" align="center">
+				<div id="cell-name`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`">
+					<input id="cell-input`+track_item.id+`" type="text" style="width:98%; background-color:inherit; border:none; font-size:25px; text-align:center; font-weight:700;" value="`+creature.name+`" onChange="changeName('`+track_item.id+`', 'cell-input`+track_item.id+`')"></input>
+				</div>
+				<div id="cell-initiative`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`" >
+					<input id="track_`+track_item.id+`" class='secondary-color' type="text" style="width:97%; background-color:inherit; border:none; font-size:25px; text-align:center;" value="`+initiative+`" onChange="SetInitiative(`+track_item.id+`)" placeholder ="Initiative"></input>
+				</div>
+				<div id="cell-delete`+track_item.id+`" class="cell-field" style="background-color:`+creature.color+`">
+					<input type="color" id="select-color`+track_item.id+`" class="input-color" style="background-color:`+creature.color+`" list="colors" value="`+creature.color+`" onChange="changeColor(['cell-name`+track_item.id+`', 'cell-initiative`+track_item.id+`', 'cell-delete`+track_item.id+`', 'power-input`+track_item.id+`', 'debuff-input`+track_item.id+`', 'buff-input`+track_item.id+`', 'concetrate-input`+track_item.id+`', 'delete-btn`+track_item.id+`', 'select-color`+track_item.id+`'], 'select-color`+track_item.id+`', `+track_item.id+`)"></input>
+					<datalist id="colors">
+					<option value="#ff0000">
+					<option value="#008000">
+					<option value="#808080">
+					<option value="#ffff00">
+					<option value="#8b00ff">
+					<option value="#42aaff">
+					<option value="#ffffff">
+				</datalist>
+					<button id="delete-btn`+track_item.id+`" class='secondary-color' style="background-color:`+creature.color+`" onClick="DeleteTrack(`+track_item.id+`)">Remove</button>
+				</div>
+				
+			</div>
+		</div>`;
+	
+	//append to row
+	const tracker = document.getElementById("tracker-row");
+	tracker.append(cell);
+}
+
+function DeleteTrack(id_track)
+{
+	const track_storage = localStorage.getItem('tracker');
+	var track = JSON.parse(track_storage);
+	
+	for (var i=0; i < track.length; i++)
+	{
+		if (track[i].id == id_track)
+			track.splice(i, 1);
+	}
+		
+	const str_ = JSON.stringify(track);
+	localStorage.setItem('tracker', str_);
+
+	UpdateTrackTable();
+	UpdateTurnImage();
+}
+
+function FirstTurnUpdateTracker()
+{
+	firstTurn();
+	UpdateTrackTable();
+	UpdateTurnImage();
+}
+
+function UpdateTrackTable()
+{
+	//delete, create
+	const tracker_table = document.getElementById("tracker-table");
+	var tracker_row = document.getElementById("tracker-row");
+	
+	tracker_row.remove();
+	tracker_row = document.createElement('tr');
+	tracker_row.id = "tracker-row";
+	tracker_table.append(tracker_row);
+	
+	//get and sort creatures by initiative
+	const storage = localStorage.getItem('tracker');
+	var trackers = JSON.parse(storage);
+	
+	trackers = trackers.sort((a, b) => b.initiative - a.initiative);
+	
+	//append cells
+	
+	for (var i=0; i < trackers.length; i++)
+	{
+		AddTrackCell(trackers[i]);
+	}
+}
+
+function ClearNameField()
+{
+	const name = document.getElementById("creature-name");
+	name.value = "";
+}
+
+function SetInitiative(id_track)
+{
+	var value = document.getElementById("track_"+id_track).value
+	var storage = localStorage.getItem('tracker');
+	storage = JSON.parse(storage);
+	
+	for(var i=0; i < storage.length; i++)
+	{
+		if (storage[i].id == id_track)
+		{
+			storage[i].initiative = value;
+			break;
+		}	
+	}
+	
+	storage = JSON.stringify(storage);
+	localStorage.setItem('tracker', storage);
+}
+
+function showEffects(concentration_id, power_id, debuff_id, buff_id, value)
+{
+	const conc_el = document.getElementById(concentration_id);
+	const power_el = document.getElementById(power_id);
+	const debuff_el = document.getElementById(debuff_id);
+	const buff_el = document.getElementById(buff_id);
+	
+	//check every input
+	if (value)
+	{
+		// getting value of input: console.log(conc_el.childNodes[3].value);
+		if (conc_el.childNodes[3].value < 0)
+			conc_el.style.display = 'none';
+		if (power_el.childNodes[3].value < 0)
+			power_el.style.display = 'none';
+		if (debuff_el.childNodes[3].value < 0)
+			debuff_el.style.display = 'none';
+		if (buff_el.childNodes[3].value < 0)
+			buff_el.style.display = 'none';
+	}
+	else
+	{
+		conc_el.style.display = 'block';
+		power_el.style.display = 'block';
+		debuff_el.style.display = 'block';
+		buff_el.style.display = 'block';
+	}	
+}
+
+function changeColor(fields, color_field_id, track_id)
+{
+	var color_field_el = document.getElementById(color_field_id);
+	var color = color_field_el.value;
+	
+	for (var j = 0; j < fields.length; j++)
+	{
+		var field_el = document.getElementById(fields[j]);
+		field_el.style.backgroundColor = color;
+	}
+	
+	var storage = JSON.parse(localStorage.getItem('tracker'));
+	for (var i = 0; i < storage.length; i++)
+	{
+		if (storage[i].id==track_id)
+		{
+			storage[i].creature.color = color;
+			localStorage.setItem('tracker', JSON.stringify(storage));
+			break;
+		}
+	}
+	
+	
+}
+
+function changeName(track_id, input_field)
+{
+	var name_field_el = document.getElementById(input_field);
+	var new_name = name_field_el.value;
+	
+	var storage = JSON.parse(localStorage.getItem('tracker'));
+	for (var i = 0; i < storage.length; i++)
+	{
+		if (storage[i].id==track_id)
+		{
+			storage[i].creature.name = new_name;
+			localStorage.setItem('tracker', JSON.stringify(storage));
+			break;
+		}
+	}
+}
+
+function changeEffect(effect_id, track_item_id, effect_type)
+{
+	
+	const effect_value = document.getElementById(effect_id).value;
+	var storage = JSON.parse(localStorage.getItem('tracker'));
+	for (var i = 0; i < storage.length; i++)
+	{
+		if (storage[i].id == track_item_id)
+		{
+			storage[i].effects[effect_type] = effect_value;
+		}
+	}
+	
+	localStorage.setItem('tracker', JSON.stringify(storage));
+}
+
+function firstTurn()
+{
+	var tracker = localStorage.getItem('tracker');
+	if (tracker.length > 0)
+	{
+		//check for any equals inititatives
+		var tracker = JSON.parse(tracker);
+		for (var i=0; i < tracker.length; i++)
+			for (var j=0; j < tracker.length; j++)
+			if (i != j && tracker[i].initiative == tracker[j].initiative)
+			{
+				alert('Two or more creatures has equal initiatives!!! It will cause error if creature which has turn was deleted and next creature has same initiative. CHANGE SAME INITIATIVE!!!');
+				i = tracker.length;
+				j = tracker.length;
+				break;
+			}
+		
+		var currentTurn = localStorage.getItem('turn'); //index in tracker of current creature turn
+		var currentInitiative = localStorage.getItem('inititative');
+		
+		//sort creatures by initiative
+		tracker = tracker.sort((a, b) => b.initiative - a.initiative);
+		currentTurn = tracker[0].id;
+		currentInitiative = tracker[0].initiative;
+		
+		localStorage.setItem('turn', currentTurn);
+		localStorage.setItem('inititative', currentInitiative);
+	}
+}
+
+function nextTurn()
+{
+	var tracker = localStorage.getItem('tracker');
+
+	if (tracker.length > 0)
+	{
+		//check for any equals inititatives
+		var tracker = JSON.parse(tracker);
+		for (var i=0; i < tracker.length; i++)
+			for (var j=0; j < tracker.length; j++)
+			if (i != j && tracker[i].initiative == tracker[j].initiative)
+			{
+				alert('Two or more creatures has equal initiatives!!! It will cause error if creature which has turn was deleted and next creature has same initiative. CHANGE SAME INITIATIVE!!!');
+				i = tracker.length;
+				j = tracker.length;
+				break;
+			}
+		
+		var currentTurn = localStorage.getItem('turn'); //index in tracker of current creature turn
+		var currentInitiative = localStorage.getItem('inititative');
+		
+		//sort creatures by initiative
+		tracker = tracker.sort((a, b) => b.initiative - a.initiative);
+		
+		if (currentTurn == null)
+		{
+			currentTurn = tracker[0].id;
+			currentInitiative = tracker[0].initiative;
+		}
+		else
+		{
+			var notFound = true; //flag
+		
+			for (var i=0; i < tracker.length; i++)
+			{
+				if (tracker[i].id == currentTurn)
+				{
+					notFound = false;
+					DecrementEffects(tracker[i].id);
+					if (i+1 >= tracker.length)
+					{
+						currentTurn = tracker[0].id;
+						currentInitiative = tracker[0].initiative;
+					}
+					else
+					{
+						currentTurn = tracker[i+1].id;
+						currentInitiative = tracker[i+1].initiative;
+					}
+					break;
+				}
+			}
+		
+			if (notFound)
+			{
+				for (var i=0; i < tracker.length; i++)
+					if (tracker[i].initiative < currentInitiative)
+					{
+						notFound = false;
+						currentTurn = tracker[i].id;
+						currentInitiative = tracker[i].initiative;
+						break;
+					}
+					
+				if (notFound)
+					{
+						currentTurn = tracker[0].id;
+						currentInitiative = tracker[0].initiative;
+					}
+			}
+		}
+	
+		localStorage.setItem('turn', currentTurn);
+		localStorage.setItem('inititative', currentInitiative);
+	}
+	UpdateTrackTable();
+	UpdateTurnImage();
+}
+
+function UpdateTurnImage()
+{
+	var cells = document.getElementsByClassName('tracker-cell');
+	var currentTurn_id = localStorage.getItem('turn');
+	
+	if (currentTurn_id != null)
+	{
+		for(var i =0; i < cells.length; i++)
+		{
+			if (cells[i].id.replace('cell', '') == currentTurn_id)
+			{
+				cells[i].classList.remove('cell-box-inactive');
+				cells[i].classList.add('cell-box');
+			}
+			else
+			{
+				cells[i].classList.remove('cell-box');
+				cells[i].classList.add('cell-box-inactive');
+			}
+		}
+	}
+}
+
+function DecrementEffects(track_id)
+{
+	var tracker = JSON.parse(localStorage.getItem('tracker'));
+	for (var i=0; i<tracker.length; i++)
+	{
+		if(tracker[i].id == track_id)
+		{	
+			if (tracker[i].effects['conc'] >= 0)
+				tracker[i].effects['conc'] -= 1;
+			
+			if (tracker[i].effects['buff'] >= 0)
+				tracker[i].effects['buff'] -= 1;
+				
+			if (tracker[i].effects['power'] >= 0)
+				tracker[i].effects['power'] -= 1;
+				
+			if (tracker[i].effects['debuff'] >= 0)
+				tracker[i].effects['debuff'] -= 1;
+		}
+	}
+	localStorage.setItem('tracker', JSON.stringify(tracker));
+}
+
+function SkipRound()
+{
+	var tracker = JSON.parse(localStorage.getItem('tracker'));
+	tracker = tracker.sort((a, b) => b.initiative - a.initiative);
+	var currentTurn = localStorage.getItem('turn');
+	var currentIndex = -1;
+	
+	for (var i=0; i < tracker.length; i++)
+		if (tracker[i].id == currentTurn)
+		{
+			currentIndex = i;
+			break;
+		}
+		
+	if (currentIndex == -1)
+	{
+		var currentInitiative = localStorage.getItem('initiative');
+		for (var i=0; i < tracker.length; i++)
+			if (tracker[i].initiative < currentInitiative)
+			{
+				currentIndex = i;
+				break;
+			}
+	}
+	
+	for (var i=currentIndex; i < tracker.length; i++)
+		DecrementEffects(tracker[i].id);
+	
+	firstTurn();
+	UpdateTrackTable();
+	UpdateTurnImage();
+}
+
+function ClearTracker()
+{
+	localStorage.removeItem('tracker');
+	localStorage.removeItem('turn');
+	localStorage.removeItem('initiative');
+	UpdateTrackTable();
+	UpdateTurnImage();
+}
+
+function GlobalKeyDown(e)
+{
+	if (e.key == 'Enter')
+	{
+		nextTurn();
+	}
+}
+</script>

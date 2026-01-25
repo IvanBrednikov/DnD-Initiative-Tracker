@@ -886,11 +886,75 @@ function ClearTracker()
 	UpdateTurnImage();
 }
 
+function ChangeEffect_CTurn(effect_type, value)
+//changes effect value for creature wich turn is, for make keybinds
+//only local database changes
+//effect_type = 'conc', 'debuff', 'power', 'buff';
+//if value < 0, effect_value sets -1, if >=0, addition to current value or 0
+{
+	//taking track id of creature turnning
+	var currentTurn = JSON.parse(localStorage.getItem('turn'));
+	
+	//change effect value
+	var storage = JSON.parse(localStorage.getItem('tracker'));
+	for (var i = 0; i < storage.length; i++)
+	{
+		if (storage[i].id == currentTurn)
+		{
+			currentValue = storage[i].effects[effect_type];
+			if (value < 0)
+				newValue = -1;
+			else
+				if (currentValue < 0)
+					newValue = value;
+				else
+					newValue = currentValue + value;
+			storage[i].effects[effect_type] = newValue;
+			break;
+		}
+	}
+	
+	//save changes
+	localStorage.setItem('tracker', JSON.stringify(storage));
+}
+
 function GlobalKeyDown(e)
 {
 	if (e.key == 'Enter')
 	{
 		nextTurn();
+	}
+	
+	//F2 - add 10 buff
+	if (e.key == 'F2')
+	{
+		ChangeEffect_CTurn('buff', 10);
+		UpdateTrackTable();
+		UpdateTurnImage();
+	}
+	
+	//F8 - remove buff
+	if (e.key == 'F8')
+	{
+		ChangeEffect_CTurn('buff', -1);
+		UpdateTrackTable();
+		UpdateTurnImage();
+	}
+	
+	//F9 add 10 concentration
+	if (e.key == 'F9')
+	{
+		ChangeEffect_CTurn('conc', 10);
+		UpdateTrackTable();
+		UpdateTurnImage();
+	}
+	
+	//# remove concentration
+	if (e.key == '#')
+	{
+		ChangeEffect_CTurn('conc', -1);
+		UpdateTrackTable();
+		UpdateTurnImage();
 	}
 }
 </script>

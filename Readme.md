@@ -41,7 +41,6 @@ You created your own card! Pay attention application do not save the file on the
 
 ## Issues
   - application uses local storage of browser, which have limit (basicaly 5-10MB), anycase it save only path to images and some data, so you can load more then 10,000 creatures
-  - when button "Next turn" focused and enter pressed tracker skips turn twice, just unfocus specified button
   - if application scale shows incorrect, you may change scale in browser
 
 ## Compatible browsers
